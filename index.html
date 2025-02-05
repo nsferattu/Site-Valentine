@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentines ask</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            font-family: Arial, sans-serif;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: white;
+            text-align: center;
+            z-index: 2;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .buttons {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            z-index: 3;
+        }
+
+        button {
+            font-size: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            margin: 10px;
+            cursor: pointer;
+        }
+
+        .yes {
+            background-color: #ff007f;
+            color: white;
+        }
+
+        .no {
+            background-color: gray;
+            color: white;
+        }
+
+        .result {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            z-index: 4;
+        }
+
+        .result img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result p {
+            font-size: 100px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="text">Nacisnij gdzie chcesz</h1>
+    <canvas id="heartCanvas"></canvas>
+    <div class="buttons" id="buttons">
+        <button class="yes" onclick="showLove()">Yeeessss Baby!! ❤️</button>
+        <button class="no" onclick="showSadness()">Nah, Fuck off</button>
+    </div>
+    <div class="result" id="result"></div>
+
+    <script>
+        const phrases = [
+            "Hejooo ❤️", "Chce ci coś powiedzieć", 
+            "Sprobój nacisnąć", "Jeszcze raz", 
+            "Dawaj, nie poddawaj się, naciskaj", "Obiecuje, to ostatni raz",
+            "Really", "To", "Ostatni", "Ale to oszustwo, hehe, hahahaha, dawaj jeszcze!", 
+            "Wiem ze juz jesteś zła", "Hmm", "Okej, wtedy", "Ale", "Ja poprostu chciałem powiedzieć",
+            "I love you ❤️" 
+        ];
+
+        let clickCount = 0;
+        const maxClicks = 16;
+        const textElement = document.getElementById("text");
+        const canvas = document.getElementById("heartCanvas");
+        const ctx = canvas.getContext("2d");
+        const buttons = document.getElementById("buttons");
+        const result = document.getElementById("result");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+
+        class Heart {
+            constructor(x, y, size, speedY) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.speedY = speedY;
+                this.opacity = 1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = `rgba(255, 0, 127, ${this.opacity})`;
+                ctx.moveTo(this.x, this.y);
+                ctx.bezierCurveTo(
+                    this.x - this.size / 2, this.y - this.size / 2,
+                    this.x - this.size, this.y + this.size / 3,
+                    this.x, this.y + this.size
+                );
+                ctx.bezierCurveTo(
+                    this.x + this.size, this.y + this.size / 3,
+                    this.x + this.size / 2, this.y - this.size / 2,
+                    this.x, this.y
+                );
+                ctx.closePath();
+                ctx.fill();
+            }
+            update() {
+                this.y -= this.speedY;
+                this.opacity -= 0.01;
+            }
+        }
+
+        function handleHearts() {
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].opacity <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function createHeart(x, y) {
+            for (let i = 0; i < 3; i++) {
+                particles.push(new Heart(
+                    x + Math.random() * 30 - 15, 
+                    y + Math.random() * 30 - 15, 
+                    Math.random() * 40 + 20, 
+                    Math.random() * 2 + 1 
+                ));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            handleHearts();
+            requestAnimationFrame(animate);
+        }
+
+        document.addEventListener("click", function(event) {
+            if (clickCount < maxClicks) {
+                textElement.innerText = phrases[clickCount];
+                clickCount++;
+                createHeart(event.clientX, event.clientY);
+            } else {
+                textElement.innerText = "Will you be my Valentine?";
+                buttons.style.display = "block";
+            }
+        });
+
+        function showLove() {
+            clearScreen();
+            result.innerHTML = "<img src='/Users/mak/Downloads/animation.gif'>";
+            result.style.display = "flex";
+        }
+
+        function showSadness() {
+            clearScreen();
+            result.innerHTML = "<p>:(</p>";
+            result.style.display = "flex";
+        }
+
+        function clearScreen() {
+            textElement.style.display = "none";
+            buttons.style.display = "none";
+            canvas.style.display = "none";
+        }
+
+        setInterval(() => {
+            createHeart(
+                Math.random() * canvas.width,
+                Math.random() * canvas.height
+            );
+        }, 300);
+
+        animate();
+    </script>
+</body>
+</html>
